@@ -1,0 +1,264 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Echap Key Generator</title>
+	<style>
+		body {
+			background: #181a20;
+			min-height: 100vh;
+			margin: 0;
+			font-family: 'Segoe UI', Arial, sans-serif;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.container {
+			background: #23262f;
+			padding: 2.5rem 2rem 2rem 2rem;
+			border-radius: 1.2rem;
+			box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+			text-align: center;
+			max-width: 400px;
+			width: 100%;
+		}
+		h1 {
+			color: #fff;
+			margin-bottom: 1.5rem;
+			font-size: 2rem;
+			font-weight: 600;
+			letter-spacing: 1px;
+		}
+		.key-box {
+			font-size: 1.1rem;
+			background: #181a20;
+			border: 1px solid #353945;
+			border-radius: 0.5rem;
+			padding: 0.8rem 1rem;
+			margin-bottom: 1.2rem;
+			word-break: break-all;
+			color: #fff;
+			min-height: 2.2rem;
+			letter-spacing: 0.5px;
+		}
+		.btn {
+			background: linear-gradient(90deg, #5a5af7 0%, #3a3a8a 100%);
+			color: #fff;
+			border: none;
+			border-radius: 0.5rem;
+			padding: 0.7rem 1.5rem;
+			font-size: 1rem;
+			cursor: pointer;
+			margin: 0.2rem 0.2rem;
+			transition: background 0.2s, box-shadow 0.2s;
+			box-shadow: 0 2px 8px rgba(90,90,247,0.08);
+		}
+		.btn:hover {
+			background: linear-gradient(90deg, #3a3a8a 0%, #5a5af7 100%);
+		}
+		.copy-msg {
+			color: #4ade80;
+			font-size: 0.95rem;
+			margin-top: 0.5rem;
+			min-height: 1.2rem;
+		}
+		.saved-keys-title {
+			color: #b1b1b1;
+			font-size: 1.1rem;
+			margin: 2rem 0 0.5rem 0;
+			font-weight: 500;
+			text-align: left;
+		}
+		.saved-keys-list {
+			background: #181a20;
+			border: 1px solid #353945;
+			border-radius: 0.5rem;
+			padding: 0.7rem 1rem;
+			color: #fff;
+			font-size: 0.98rem;
+			text-align: left;
+			max-height: 180px;
+			overflow-y: auto;
+			margin-bottom: 0.5rem;
+		}
+		.saved-key-item {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0.3rem 0;
+			border-bottom: 1px solid #23262f;
+		}
+		.saved-key-item:last-child {
+			border-bottom: none;
+		}
+		.saved-key-text {
+			word-break: break-all;
+			color: #e0e0e0;
+			font-size: 0.97rem;
+		}
+		.delete-btn {
+			background: none;
+			border: none;
+			color: #f87171;
+			font-size: 1.1rem;
+			cursor: pointer;
+			margin-left: 0.7rem;
+			padding: 0;
+			transition: color 0.2s;
+		}
+		.delete-btn:hover {
+			color: #ef4444;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>Echap Key Generator</h1>
+		<div class="key-box" id="apiKey">Click Generate</div>
+		<button class="btn" onclick="generateKeyFromServer()">Generate Key</button>
+		<button class="btn" onclick="copyKey()">Copy</button>
+		<button class="btn" onclick="saveKey()">Save Key</button>
+		<button class="btn" onclick="testProtectedEndpoint()">Test Protected Endpoint</button>
+		<div class="copy-msg" id="copyMsg"></div>
+		<div class="saved-keys-title">Saved API Keys</div>
+		<div class="saved-keys-list" id="savedKeysList"></div>
+	</div>
+	<script>
+		// Generate API key from backend
+		function generateKeyFromServer() {
+			fetch('https://7d4fe02a-8fe0-4e07-818a-50ba13dbc5bc-00-1n8tjpt1qgbin.pike.replit.dev/', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' }
+			})
+			.then(res => res.json())
+			.then(data => {
+				if (data.apiKey) {
+					document.getElementById('apiKey').textContent = data.apiKey;
+					document.getElementById('copyMsg').textContent = 'Key generated from server!';
+				} else {
+					document.getElementById('copyMsg').textContent = 'Failed to generate key.';
+				}
+			})
+			.catch(() => {
+				document.getElementById('copyMsg').textContent = 'Server not reachable.';
+			});
+		}
+		// Test protected endpoint with current API key
+		function testProtectedEndpoint() {
+			const key = document.getElementById('apiKey').textContent;
+			if (!key || key === 'Click Generate') {
+				document.getElementById('copyMsg').textContent = 'Generate a key first!';
+				return;
+			}
+			fetch('https://7d4fe02a-8fe0-4e07-818a-50ba13dbc5bc-00-1n8tjpt1qgbin.pike.replit.dev/data', {
+				headers: { 'x-api-key': key }
+			})
+			.then(res => res.json())
+			.then(data => {
+				if (data.message) {
+					document.getElementById('copyMsg').textContent = 'Protected: ' + data.message;
+				} else {
+					document.getElementById('copyMsg').textContent = data.error || 'Error.';
+				}
+			})
+			.catch(() => {
+				document.getElementById('copyMsg').textContent = 'Server not reachable.';
+			});
+		}
+		function copyKey() {
+			const key = document.getElementById('apiKey').textContent;
+			if (key && key !== 'Click Generate') {
+				navigator.clipboard.writeText(key).then(() => {
+					document.getElementById('copyMsg').textContent = 'Copied to clipboard!';
+				}, () => {
+					document.getElementById('copyMsg').textContent = 'Failed to copy.';
+				});
+			} else {
+				document.getElementById('copyMsg').textContent = 'Generate a key first!';
+			}
+		}
+		function saveKey() {
+			const key = document.getElementById('apiKey').textContent;
+			if (!key || key === 'Click Generate') {
+				document.getElementById('copyMsg').textContent = 'Generate a key first!';
+				return;
+			}
+			let keys = JSON.parse(localStorage.getItem('echap_keys') || '[]');
+			if (keys.includes(key)) {
+				document.getElementById('copyMsg').textContent = 'Key already saved!';
+				return;
+			}
+			keys.unshift(key);
+			if (keys.length > 20) keys = keys.slice(0, 20); // Limit to 20 keys
+			localStorage.setItem('echap_keys', JSON.stringify(keys));
+			document.getElementById('copyMsg').textContent = 'Key saved!';
+			renderSavedKeys();
+		}
+		function renderSavedKeys() {
+			const keys = JSON.parse(localStorage.getItem('echap_keys') || '[]');
+			const list = document.getElementById('savedKeysList');
+			if (!keys.length) {
+				list.innerHTML = '<span style="color:#888">No saved keys.</span>';
+				return;
+			}
+			list.innerHTML = '';
+			keys.forEach((key, idx) => {
+				const div = document.createElement('div');
+				div.className = 'saved-key-item';
+				const span = document.createElement('span');
+				span.className = 'saved-key-text';
+				span.textContent = key;
+				const delBtn = document.createElement('button');
+				delBtn.className = 'delete-btn';
+				delBtn.title = 'Delete key';
+				delBtn.innerHTML = '&times;';
+				delBtn.onclick = () => deleteKey(idx);
+				div.appendChild(span);
+				div.appendChild(delBtn);
+				list.appendChild(div);
+			});
+		}
+		function deleteKey(idx) {
+			let keys = JSON.parse(localStorage.getItem('echap_keys') || '[]');
+			keys.splice(idx, 1);
+			localStorage.setItem('echap_keys', JSON.stringify(keys));
+			renderSavedKeys();
+		}
+		// Render saved keys on load
+		window.onload = renderSavedKeys;
+	</script>
+	<script>// index.js
+const express = require('express');
+const axios = require('axios');
+const app = express();
+app.use(express.json());
+
+const GOOGLE_API_KEY = process.env.AIzaSyADprefOch_kxuj0WfuaThePl6pDGmIiew; // Get key from environment variables
+
+app.post('/api/generate', async (req, res) => {
+  const userPrompt = req.body.prompt;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_API_KEY}`;
+  
+  try {
+    const response = await axios.post(url, {
+      contents: [{
+        parts: [{ text: userPrompt }]
+      }]
+    });
+    
+    // Send the response from Google's API back to your client
+    res.json(response.data);
+  } catch (error) {
+    console.error('API call failed:', error.response.data);
+    res.status(500).json({ error: 'Failed to get a response from Google AI.' });
+  }
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});</script>
+</body>
+</html>
